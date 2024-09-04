@@ -129,7 +129,7 @@ fun filterAndCreateFile(homeDirectory: String, fileName: String, filters: Filter
     inputFile.bufferedReader().use { reader ->
         outputFile.bufferedWriter().use { writer ->
             reader.forEachLine { line ->
-                if (filters.mandatoryFilters.any { line.contains(it) } &&
+                if ((filters.mandatoryFilters.isEmpty() || filters.mandatoryFilters.any { line.contains(it) }) &&
                     (filters.includeFilters.isEmpty() || filters.includeFilters.any { line.contains(it) }) &&
                     filters.excludeFilters.none { line.contains(it) }) {
                     writer.write(line)
