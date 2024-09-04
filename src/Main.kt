@@ -2,9 +2,11 @@ import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+data class Filters(val mandatoryFilters: List<String>, val includeFilters: List<String>, val excludeFilters: List<String>)
+
 fun main(args: Array<String>) {
     if (args.size != 2) {
-        println("Usage: java -jar LogParser.jar <directory> <filter_file>")
+        println("Usage: java -jar LogParser.jar <logs_directory> <filter_file_with_extension>")
         return
     }
 
@@ -15,14 +17,14 @@ fun main(args: Array<String>) {
     moveLogFilesToInputDirectory(homeDirectory)
 
     // Check if the input directory exists
-    val hasInputDir = File("$homeDirectory/input").exists()
+    val hasInputDir = File("$homeDirectory${File.separator}input").exists()
     if (!hasInputDir) {
         println("No input directory found")
         return
     }
 
     // Scan the input directory for log files
-    val logFiles = scanForLogFiles("$homeDirectory/input")
+    val logFiles = scanForLogFiles("$homeDirectory${File.separator}input")
     if (logFiles.isEmpty()) {
         println("No log files found in the input directory")
         return
@@ -30,7 +32,7 @@ fun main(args: Array<String>) {
 
     // Read the filter file
     val filters = readFilterFile(args[1])
-    if (filters.first.isEmpty() && filters.second.isEmpty()) {
+    if (filters.mandatoryFilters.isEmpty() && filters.includeFilters.isEmpty() && filters.excludeFilters.isEmpty()) {
         println("No filters found in the filter file")
         return
     }
@@ -62,7 +64,7 @@ fun moveLogFilesToInputDirectory(homeDirectory: String) {
     }
 
     // Create the input directory if it doesn't exist
-    val inputDirectory = "$homeDirectory/input"
+    val inputDirectory = "$homeDirectory${File.separator}input"
     val inputDirectoryFile = File(inputDirectory)
     if (!inputDirectoryFile.exists()) {
         println("Creating input directory")
@@ -72,7 +74,7 @@ fun moveLogFilesToInputDirectory(homeDirectory: String) {
     // Move the log files to the input directory
     println("Moving log files to the input directory")
     for (logFile in logFiles) {
-        val newFile = File("$inputDirectory/${logFile.name}")
+        val newFile = File("$inputDirectory${File.separator}${logFile.name}")
         logFile.renameTo(newFile)
     }
 }
@@ -85,29 +87,32 @@ fun scanForLogFiles(directoryPath: String): List<File> {
     }?.toList() ?: emptyList()
 }
 
-fun readFilterFile(filterFilePath: String): Pair<List<String>, List<String>> {
+fun readFilterFile(filterFilePath: String): Filters {
     println("Reading filter file: $filterFilePath")
     val filterFile = File(filterFilePath)
     if (!filterFile.exists()) {
         println("Filter file not found")
-        return Pair(emptyList(), emptyList())
+        return Filters(emptyList(), emptyList(), emptyList())
     }
 
+    val mandatoryFilters = mutableListOf<String>()
     val includeFilters = mutableListOf<String>()
     val excludeFilters = mutableListOf<String>()
     filterFile.forEachLine { line ->
-        if (line.startsWith("+")) {
+        if (line.startsWith("!")) {
+            mandatoryFilters.add(line.substring(1))
+        } else if (line.startsWith("+")) {
             includeFilters.add(line.substring(1))
         } else if (line.startsWith("-")) {
             excludeFilters.add(line.substring(1))
         }
     }
 
-    return Pair(includeFilters, excludeFilters)
+    return Filters(mandatoryFilters, includeFilters, excludeFilters)
 }
 
 fun createOutputDirectory(homeDirectory: String) {
-    val outputDirectory = "$homeDirectory/output"
+    val outputDirectory = "$homeDirectory${File.separator}output"
     val outputDirectoryFile = File(outputDirectory)
     if (!outputDirectoryFile.exists()) {
         println("Creating output directory")
@@ -115,16 +120,18 @@ fun createOutputDirectory(homeDirectory: String) {
     }
 }
 
-fun filterAndCreateFile(homeDirectory: String, fileName: String, filters: Pair<List<String>, List<String>>): String {
-    val inputFile = File("$homeDirectory/input/$fileName")
+fun filterAndCreateFile(homeDirectory: String, fileName: String, filters: Filters): String {
+    val inputFile = File("$homeDirectory${File.separator}input${File.separator}$fileName")
     val dateTimeString = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
-    val outputFilePath = "$homeDirectory/output/${inputFile.nameWithoutExtension}_$dateTimeString.log"
+    val outputFilePath = "$homeDirectory${File.separator}output${File.separator}${inputFile.nameWithoutExtension}_$dateTimeString.log"
     val outputFile = File(outputFilePath)
 
     inputFile.bufferedReader().use { reader ->
         outputFile.bufferedWriter().use { writer ->
             reader.forEachLine { line ->
-                if (filters.first.any { line.contains(it) } && filters.second.none { line.contains(it) }) {
+                if (filters.mandatoryFilters.any { line.contains(it) } &&
+                    (filters.includeFilters.isEmpty() || filters.includeFilters.any { line.contains(it) }) &&
+                    filters.excludeFilters.none { line.contains(it) }) {
                     writer.write(line)
                     writer.newLine()
                 }
