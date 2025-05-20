@@ -5,8 +5,8 @@ import java.time.format.DateTimeFormatter
 data class Filters(val mandatoryFilters: List<String>, val includeFilters: List<String>, val excludeFilters: List<String>)
 
 fun main(args: Array<String>) {
-    if (args.size != 2) {
-        println("Usage: java -jar LogParser.jar <logs_directory> <filter_file_with_extension>")
+    if (args.size != 2 || args[0].isEmpty() || args[1].isEmpty()) {
+        println("[ERROR] Usage: `java -jar LogParser.jar <logs_directory> <filter_file_with_extension>`")
         return
     }
 

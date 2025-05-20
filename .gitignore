@@ -1,0 +1,58 @@
+# === Gradle build output ===
+/build/
+/.gradle/
+
+# === Kotlin / Java build output ===
+/out/
+
+# === IDE configs ===
+# IntelliJ / Android Studio
+.idea/
+*.iml
+*.iws
+
+# VS Code
+.vscode/
+
+# CLion / CMake
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+Makefile
+compile_commands.json
+
+# === OS-specific files ===
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+*.swp
+*.swo
+
+# === Logs / temp files ===
+*.log
+*.tmp
+
+# === Local machine config ===
+local.properties
+
+# === Gradle wrapper ===
+# Include wrapper scripts and properties, but ignore other wrapper files
+!gradlew
+!gradlew.bat
+!gradle/wrapper/gradle-wrapper.properties
+!gradle/wrapper/gradle-wrapper.jar
+
+# Ignore everything else in gradle folder (just in case)
+gradle/*
+
+# === Generated JARs ===
+*.jar
+
+# === Crash reports and misc ===
+hs_err_pid*
+replay_pid*
+
+# === Kotlin/JS (if ever applicable) ===
+node_modules/
+build/js/packages/
