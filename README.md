@@ -25,7 +25,7 @@ java -jar build/libs/log-parser.jar <logs_directory> <filter_file_with_extension
 
 Example:
 ```bash
-java -jar build/libs/log-parser.jar logs filters/ErrorFilter.txt
+java -jar build/libs/log-parser.jar JIRA-1234 filters/MapUpdateFilter.txt
 ```
 
 ### 2. Use the helper script:
