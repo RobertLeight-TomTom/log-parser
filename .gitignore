@@ -28,7 +28,6 @@ ehthumbs.db
 Icon?
 *.swp
 *.swo
-*.bat
 
 # === Logs / temp files ===
 *.log
