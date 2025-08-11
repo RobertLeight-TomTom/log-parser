@@ -9,10 +9,11 @@ class LogParser {
     private val settings = ParserSettings()
 
     fun parseSettings(args: Array<String>): Boolean {
+        // Attempt to parse the command line arguments
         val canContinue = settings.parse(args)
         if (!canContinue) {
             println("[ERROR] Parsing settings failed")
-            println("Usage: `java -jar LogParser.jar <logs_directory> <filter_file_with_extension> [--from HH:mm:ss] [--to HH:mm:ss]`")
+            println("Usage: `java -jar LogParser.jar <logs_directory> [--filter filter_file.extension] [--from HH:mm:ss] [--to HH:mm:ss]`")
         }
         return canContinue
     }
@@ -93,6 +94,7 @@ class LogParser {
     }
 
     private fun scanForLogFiles(directoryPath: String): List<File> {
+        // Check for any files with the extension *.log and return the files
         println("Scanning for log files in the directory: $directoryPath")
         val directory = File(directoryPath)
         return directory.listFiles { file ->
@@ -103,11 +105,14 @@ class LogParser {
     private fun readFilterFile(filterFilePath: String): Filters {
         println("Reading filter file: $filterFilePath")
         val filterFile = File(filterFilePath)
+
+        // If no filter file is found, just return empty filters
         if (!filterFile.exists()) {
             println("Filter file not found")
             return Filters(emptyList(), emptyList(), emptyList())
         }
 
+        // Populate the filters based on the entries in the filter file
         val mandatoryFilters = mutableListOf<String>()
         val includeFilters = mutableListOf<String>()
         val excludeFilters = mutableListOf<String>()
@@ -125,6 +130,7 @@ class LogParser {
     }
 
     private fun createOutputDirectory(homeDirectory: String) {
+        // Make an output directory in the home directory to put any new files
         val outputDirectory = "$homeDirectory${File.separator}output"
         val outputDirectoryFile = File(outputDirectory)
         if (!outputDirectoryFile.exists()) {
@@ -140,6 +146,7 @@ class LogParser {
         fromTime: LocalTime?,
         toTime: LocalTime?
     ): String {
+        // Create an output file with the current timestamp appended to it
         val inputFile = File("$homeDirectory${File.separator}input${File.separator}$fileName")
         val dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss.SSS")
         val outputFilePath =
@@ -153,9 +160,11 @@ class LogParser {
 
         val timestampRegex = Regex("""\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}\.\d{3}""")
 
+        // Parse each line
         inputFile.bufferedReader().use { reader ->
             outputFile.bufferedWriter().use { writer ->
                 reader.forEachLine { line ->
+                    // Find the timestamp based on the provided regex and try to parse it
                     val match = timestampRegex.find(line)
                     if (match != null) {
                         val timestampStr = match.value
@@ -165,8 +174,10 @@ class LogParser {
                             return@forEachLine
                         }
 
+                        // Check if the time falls within the time range if one is provided
                         val isInTimeRange = (fromTime == null || lineTime >= fromTime) && (toTime == null || lineTime <= toTime)
 
+                        // And then check the filters to decide whether to write the line
                         if (isInTimeRange &&
                             (filters.mandatoryFilters.isEmpty() || filters.mandatoryFilters.any { line.contains(it) }) &&
                             (filters.includeFilters.isEmpty() || filters.includeFilters.any { line.contains(it) }) &&
@@ -181,50 +192,4 @@ class LogParser {
 
         return outputFilePath
     }
-
-//    fun parseTimeArg(arg: String): LocalTime? {
-//        return try {
-//            LocalTime.parse(arg, DateTimeFormatter.ofPattern("HH:mm:ss"))
-//        } catch (e: Exception) {
-//            null
-//        }
-//    }
-//
-//    fun quickValidateArgs(
-//        args: Array<String>,
-//        cleanedArgs: Array<String>,
-//        fromTime: LocalTime?,
-//        toTime: LocalTime?
-//    ): Boolean {
-//        fromTime?.let { from ->
-//            toTime?.let { to ->
-//                if (from > to) {
-//                    println("[ERROR] Start time '$from' is later than end time '$to'")
-//                    return false
-//                }
-//            }
-//        }
-//
-//        if (cleanedArgs.size < 2) {
-//            println("[ERROR] Missing argument <logs_directory> or <filter_file_with_extension>")
-//            return false
-//        }
-//
-//        if (args.contains("--from") && args.size < 4) {
-//            println("[ERROR] Argument '--from' given, but no start time provided")
-//            return false
-//        }
-//
-//        if (args.contains("--to") && args.size < 4) {
-//            println("[ERROR] Argument '--to' given, but no end time provided")
-//            return false
-//        }
-//
-//        if (args.contains("--from") && args.contains("--to") && args.size < 6) {
-//            println("[ERROR] Arguments '--from' and '--to' both given, but no time provided")
-//            return false
-//        }
-//
-//        return true
-//    }
 }

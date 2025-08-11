@@ -1,6 +1,5 @@
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import kotlin.math.max
 
 class ParserSettings {
     private var homeDirectory: String = ""
@@ -9,11 +8,13 @@ class ParserSettings {
     private var toTime: LocalTime? = null
 
     fun parse(args: Array<String>): Boolean {
+        // At least one argument is required - the path to the log file(s)
         if (args.isEmpty()) {
             println("No arguments given - cannot continue")
             return false
         }
 
+        // Set the home directory where we will create the input/output folders
         homeDirectory = args[0]
         if (args.size == 1) {
             println("One argument detected - continue")
@@ -25,6 +26,7 @@ class ParserSettings {
         var currentArg = 1
         var nextArg = 2
 
+        // For every optional argument, expect a parameter to be given
         while (currentArg < maxArgs) {
             if (nextArg >= maxArgs) {
                 println("Argument count does not match")
